@@ -1,4 +1,9 @@
 import React, { useState } from 'react';
+import Card from '@/components/ui/card';
+import Input from '@/components/ui/input';
+import Button from '@/components/ui/button';
+import Select from '@/components/ui/select';
+import { ArrowRight } from 'lucide-react';
 
 const styles = {
   container: {
@@ -67,12 +72,37 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
   },
+  chatContainer: {
+    marginTop: '20px',
+    padding: '10px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    backgroundColor: '#f9f9f9',
+  },
+  chatInput: {
+    width: '100%',
+    padding: '10px',
+    marginBottom: '10px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+  },
+  chatButton: {
+    width: '100%',
+    padding: '10px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  },
 };
 
 const UngdomsImportPlanlegger = () => {
   const [svar, setSvar] = useState({});
   const [aktivtSpørsmål, setAktivtSpørsmål] = useState(0);
   const [resultat, setResultat] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [currentMessage, setCurrentMessage] = useState('');
 
   const spørsmål = [
     {
@@ -190,8 +220,26 @@ const UngdomsImportPlanlegger = () => {
     if (aktivtSpørsmål > 0) setAktivtSpørsmål(aktivtSpørsmål - 1);
   };
 
+  const handleChatSubmit = async () => {
+    if (!currentMessage.trim()) return;
+    const newMessages = [...chatMessages, { role: 'user', content: currentMessage }];
+    setChatMessages(newMessages);
+    setCurrentMessage('');
+
+    const response = await fetch('/api/ask', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ question: currentMessage }),
+    });
+
+    const data = await response.json();
+    setChatMessages([...newMessages, { role: 'assistant', content: data.answer }]);
+  };
+
   return (
-    <div style={styles.container}>
+    <Card style={styles.container}>
       <h1 style={styles.title}>Din Importbedrift Planlegger</h1>
       {!resultat ? (
         <div style={styles.question}>
@@ -200,7 +248,7 @@ const UngdomsImportPlanlegger = () => {
           </div>
           <h3>{spørsmål[aktivtSpørsmål].tekst}</h3>
           {spørsmål[aktivtSpørsmål].type === "select" ? (
-            <select 
+            <Select 
               value={svar[spørsmål[aktivtSpørsmål].felt] || ''}
               onChange={(e) => oppdaterSvar(spørsmål[aktivtSpørsmål].felt, e.target.value)}
               style={styles.select}
@@ -211,9 +259,9 @@ const UngdomsImportPlanlegger = () => {
                   {option.label}
                 </option>
               ))}
-            </select>
+            </Select>
           ) : (
-            <input
+            <Input
               type={spørsmål[aktivtSpørsmål].type}
               placeholder={spørsmål[aktivtSpørsmål].placeholder}
               value={svar[spørsmål[aktivtSpørsmål].felt] || ''}
@@ -225,13 +273,13 @@ const UngdomsImportPlanlegger = () => {
           <p style={styles.explanation}>{spørsmål[aktivtSpørsmål].forklaring}</p>
           <div style={styles.buttonContainer}>
             {aktivtSpørsmål > 0 && (
-              <button onClick={forrigeSpørsmål} style={styles.button}>
+              <Button onClick={forrigeSpørsmål} style={styles.button}>
                 Forrige
-              </button>
+              </Button>
             )}
-            <button onClick={nesteSpørsmål} style={styles.button}>
-              {aktivtSpørsmål === spørsmål.length - 1 ? "Se resultat" : "Neste"}
-            </button>
+            <Button onClick={nesteSpørsmål} style={styles.button}>
+              {aktivtSpørsmål === spørsmål.length - 1 ? "Se resultat" : "Neste"} <ArrowRight />
+            </Button>
           </div>
         </div>
       ) : (
@@ -243,12 +291,33 @@ const UngdomsImportPlanlegger = () => {
             Fortjeneste: {resultat.fortjeneste} NOK
           </p>
           <p>Fortjenestemargin: {resultat.fortjenesteMargin}%</p>
-          <button onClick={() => { setAktivtSpørsmål(0); setResultat(null); }} style={styles.button}>
+          <Button onClick={() => { setAktivtSpørsmål(0); setResultat(null); }} style={styles.button}>
             Start på nytt
-          </button>
+          </Button>
         </div>
       )}
-    </div>
+
+      <div style={styles.chatContainer}>
+        <h3>OpenAI Assistant</h3>
+        <div>
+          {chatMessages.map((message, index) => (
+            <p key={index} style={{ color: message.role === 'user' ? '#007bff' : '#333' }}>
+              <strong>{message.role === 'user' ? 'You' : 'Assistant'}:</strong> {message.content}
+            </p>
+          ))}
+        </div>
+        <input
+          type="text"
+          placeholder="Stille et spørsmål..."
+          value={currentMessage}
+          onChange={(e) => setCurrentMessage(e.target.value)}
+          style={styles.chatInput}
+        />
+        <Button onClick={handleChatSubmit} style={styles.chatButton}>
+          Send
+        </Button>
+      </div>
+    </Card>
   );
 };
 
