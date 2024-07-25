@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Card from '@/components/ui/card';
-import Input from '@/components/ui/input';
-import Button from '@/components/ui/button';
-import Select from '@/components/ui/select';
+import Card from './ui/card'; 
+import Input from './ui/input';
+import Button from './ui/button';
+import Select from './ui/select';
 import { ArrowRight } from 'lucide-react';
 
 const styles = {
