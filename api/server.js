@@ -1,5 +1,5 @@
 const express = require('express');
-const { OpenAIApi, Configuration } = require('openai');
+const { Configuration, OpenAIApi } = require('openai');
 
 const app = express();
 const port = process.env.PORT || 5000;
