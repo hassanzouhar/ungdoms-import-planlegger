@@ -1,6 +1,5 @@
 const express = require('express');
-const { Configuration, OpenAIApi } = require('openai');
-require('dotenv').config();
+const { OpenAIApi, Configuration } = require('openai');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -21,6 +20,7 @@ app.post('/api/ask', async (req, res) => {
     });
     res.json({ answer: response.data.choices[0].message.content });
   } catch (error) {
+    console.error('Error during OpenAI API call:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
